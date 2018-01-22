@@ -18,5 +18,5 @@ else
   while IFS= read -r pod; do
     # echo "delete $pod"
     kubectl delete -n $1 $pod
-  done < <(kubectl -n $1 get pods -o=name | grep $3-)
+  done < <(kubectl -n $1 get pods -o=name | grep ^pods/$3-)
 fi

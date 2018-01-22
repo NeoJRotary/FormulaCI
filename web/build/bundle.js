@@ -6599,15 +6599,9 @@ class repository extends __WEBPACK_IMPORTED_MODULE_0_react___default.a.Component
     this.rmRepo = this.rmRepo.bind(this);
 
     this.state = {
-      newName: 'web-client',
-      newSrc: 'git@gitlab.com:zenport.io/web-client.git',
-      newBranch: 'formulaci-test',
-      // newName: 'admin',
-      // newSrc: 'git@gitlab.com:zenport.io/admin.git',
-      // newBranch: 'master',
-      // newName: '',
-      // newSrc: '',
-      // newBranch: '',
+      newName: '',
+      newSrc: '',
+      newBranch: '',
       list: []
     };
   }

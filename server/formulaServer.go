@@ -129,6 +129,8 @@ func (svr *formulaServer) handler(evt wsEvt) {
 		repo.trigger(evt.Data, resFunc)
 	case "formula/getHistory":
 		ci.getHistory(evt.Data, resFunc)
+	case "ping":
+		resFunc(200, "pong", "")
 	default:
 		resFunc(404, nil, "Not Found")
 	}
