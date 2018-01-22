@@ -10,4 +10,4 @@ VOLUME [ "/formulaci/data" ]
 # FormulaCI default port
 EXPOSE 8099
 
-CMD dockerd-entrypoint.sh & /formulaci/start.sh
+ENTRYPOINT ["/formulaci/start.sh"]

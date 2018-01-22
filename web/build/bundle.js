@@ -395,7 +395,9 @@ ws.start = ch => {
   ws.change = ch;
   ws.connect();
   ws.interval = setInterval(() => {
-    if (!ws.open) ws.connect();
+    if (!ws.open) ws.connect();else {
+      ws.request('ping', '');
+    }
   }, 5000);
 };
 

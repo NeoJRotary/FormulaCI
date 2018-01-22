@@ -3,7 +3,6 @@ package main
 import (
 	"bytes"
 	"compress/gzip"
-	"fmt"
 	"io/ioutil"
 	"log"
 	"mime"
@@ -64,7 +63,6 @@ func (wsvr *webServer) readFiles(base string) {
 			log.Fatal(err)
 		}
 		wsvr.list[key] = sf
-		fmt.Println(key)
 		// wsvr.mux.HandleFunc(key, wsvr.httpHandler)
 	}
 }

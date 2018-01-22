@@ -26,7 +26,14 @@ Self-Hosted CI/CD server for Kubernetes
 Prepare base image, run `./base/build.sh base`  
 Prepare dev-base image, run `./base/build.sh base`  
 Start dev server in docker, run `./dev.sh`  
-Build production image, run `./build.sh`  
+Build production image, run `./build.sh` 
+
+## VOLUME
+All formulaci data (config files, repo, docker, etc..) are at `/formulaci/data`
+
+## DIND
+You can pass "Custom daemon flags" in CMD. By default we set `-g /formulaci/data/docker` to keep docker images in volume.
 
 ## Webhook
-gitlab is listening on `{host}/webhook/gitlab`
+Gitlab is listening on `{host}/webhook/gitlab`  
+Others are in progress
