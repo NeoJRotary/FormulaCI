@@ -1,0 +1,42 @@
+{
+  "extends": "airbnb",
+  "parser": "babel-eslint",
+  "env": {
+    "browser": true,
+    "node": true,
+    "es6": true
+  },
+  "rules": {
+    "no-param-reassign": 0,
+    "comma-dangle": [
+      2,
+      "never"
+    ],
+    "import/extensions": [
+      2,
+      "never",
+      {
+        "jsx": "always",
+        "json": "always"
+      }
+    ],
+    "jsx-a11y/anchor-is-valid": [
+      "error",
+      {
+        "components": [
+          "Link"
+        ],
+        "specialLink": [
+          "hrefLeft",
+          "hrefRight"
+        ],
+        "aspects": [
+          "noHref",
+          "invalidHref",
+          "preferButton"
+        ]
+      }
+    ]
+  },
+  "globals": {}
+}

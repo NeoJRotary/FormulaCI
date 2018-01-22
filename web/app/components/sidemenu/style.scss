@@ -1,0 +1,22 @@
+#sidemenu {
+  position: fixed;
+  background: black;
+  top: 0;
+  left: 0;
+  width: 150px;
+  height: 100%;
+  .title {
+    font-family: sans-serif;
+    margin: 15px 0;
+    color: white;
+    text-align: center;
+    font-size: 23px;
+  }
+
+  a {
+    color: white;
+    display: block;
+    text-decoration: none;
+    margin: 10px;
+  }
+}

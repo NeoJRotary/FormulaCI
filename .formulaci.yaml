@@ -1,0 +1,39 @@
+mode: host
+name: admin
+branch: master
+setup: 
+- npm i
+trigger:
+  changes:
+  - /web/*
+flow:
+- install
+- build-app
+- test-app
+- build-server
+steps:
+  install:
+    changes:
+    - package.json
+    - package-lock.json
+    cmd:
+    - npm i
+  build-app:
+    cmd:
+    - npm run build-app
+  test-app:
+    cmd: 
+    - npm test
+  build-server: 
+    cmd:
+    - npm run build-server
+deploy:
+  target: kubernetes
+  kubernetes:
+    type: deploy
+    namespace: dev
+    name: admin
+    containerName: admin
+    image: asia.gcr.io/project-iddddd/admin:latest
+webhook:
+  slack: https://hooks.slack.com/services/T00000000/B00000000/XXXXXXXXXXXXXXXXXXXXXXXX

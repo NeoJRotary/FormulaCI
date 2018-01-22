@@ -1,0 +1,11 @@
+FROM formulaci-dev-base
+WORKDIR /formulaci
+COPY server/. .
+COPY web/build /formulaci/web
+RUN go build -o server .
+VOLUME [ "/formulaci/data" ]
+
+# FormulaCI default port
+EXPOSE 8099
+
+CMD dockerd-entrypoint.sh & /formulaci/start.sh

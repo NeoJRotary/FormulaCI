@@ -1,0 +1,8 @@
+#reactApp {
+  & > #router-wrapper {
+    section {
+      width: calc(100% - 150px);
+      margin: 0 0 0 150px;
+    }
+  }
+}

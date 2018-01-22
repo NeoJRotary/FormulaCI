@@ -1,0 +1,14 @@
+section#history {
+  .record {
+    margin: 10px 0;
+    border: 1px solid #AAA;
+    .col {
+      display: inline-block;
+      margin: 0 5px;
+    }
+    .cliLog {
+      background: black;
+      color: white;
+    }
+  }
+}
