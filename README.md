@@ -10,8 +10,9 @@ Self-Hosted CI/CD server for Kubernetes
 - Built-in `Cloud SDK`, `Docker`, `Git`
 - Built-in `Nodejs`, `Golang`
 - Auto-deploy k8s pods by configuration in `.formulaci.yaml`
-- All configuration is availible in web interface 
+- All system configurations are availible in web interface 
 - "Host Mode" run CI pipeline directly in server process which you can re-use `node_modules` and `go/src`
+- Docker graph in `/formulaci/data` which can keep images after restart container
 
 ## What's Next
 - Validate `.formulaci.yaml` format
@@ -24,9 +25,11 @@ Self-Hosted CI/CD server for Kubernetes
 
 ## Build
 Prepare base image, run `./base/build.sh base`  
-Prepare dev-base image, run `./base/build.sh base`  
+Prepare dev-base image, run `./base/build.sh dev-base`  
 Start dev server in docker, run `./dev.sh`  
 Build production image, run `./build.sh` 
+
+It use dev-base for server building then COPY from it. You can check Dockerfile for more detail.
 
 ## VOLUME
 All formulaci data (config files, repo, docker, etc..) are at `/formulaci/data`
