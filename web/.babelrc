@@ -1,6 +1,14 @@
 {
   "presets": [
-    "react"
+    "react",
+    ["env", {
+      "targets": {
+        "browsers": [
+          "last 2 Chrome versions"
+        ]
+      },
+      "modules": false
+    }]
   ],
   "plugins": [
     "transform-object-rest-spread"

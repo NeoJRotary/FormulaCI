@@ -1,5 +1,8 @@
 const path = require('path');
 const webpack = require('webpack');
+const UglifyJsPlugin = require('uglifyjs-webpack-plugin');
+
+process.env.NODE_ENV = 'production';
 
 const conf = {
   entry: path.resolve(__dirname, 'app', 'index.jsx'),
@@ -33,9 +36,43 @@ const conf = {
   },
   plugins: [
     new webpack.DefinePlugin({
-      'process.env.NODE_ENV': JSON.stringify('production')
-    })
+      'process.env': {
+        NODE_ENV: JSON.stringify('production')
+      }
+    }),
+    new UglifyJsPlugin()
+    // {
+    //   sourceMap: true,
+    //   uglifyOptions: {
+    //     output: {
+    //       beautify: false,
+    //       comments: false
+    //     }
+    //   }
+    // }
   ]
 };
 
-webpack(conf, () => { console.log('Web Build DONE'); });
+webpack(conf, (err, stats) => {
+  if (err) {
+    console.log('WEBPACK BUILD ERROR');
+    console.error(err.stack || err);
+    if (err.details) {
+      console.error(err.details);
+    }
+    return;
+  }
+
+  const info = stats.toJson();
+
+  if (stats.hasErrors()) {
+    console.log('WEBPACK BUILD ERROR');
+    console.error(info.errors);
+  }
+
+  if (stats.hasWarnings()) {
+    console.warn(info.warnings);
+  }
+
+  console.log('Web Build DONE');
+});

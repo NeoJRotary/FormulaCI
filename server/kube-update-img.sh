@@ -14,7 +14,7 @@ then
   echo "Different image, use kubectl set image" 
   kubectl -n $1 set image $2/$3 $4=$5 
 else
-  echo "Same image, try to kill all pods in deploy $2/$3" 
+  echo "Same image, try to kill all pods in $2/$3" 
   while IFS= read -r pod; do
     # echo "delete $pod"
     kubectl delete -n $1 $pod
