@@ -60,12 +60,6 @@ type formulaDeploy struct {
 		ContainerName string `yaml:"containerName"`
 		ImageHub      string `yaml:"imageHub"`
 		Image         string
-		// Image         struct {
-		// 	Hub     string
-		// 	HubName string
-		// 	Name    string
-		// 	Tag     string
-		// }
 	}
 }
 
@@ -94,7 +88,7 @@ func (fci *formulaCI) init() {
 }
 
 func (fci *formulaCI) getHistory(data interface{}, resFunc wsResFunc) {
-	rows, err := sqlite.query("SELECT result, repo, branch, flow, log, time, dur FROM history ORDER BY rowid DESC;")
+	rows, err := sqlite.query("SELECT result, repo, branch, flow, log, time, dur, rowid FROM history ORDER BY rowid DESC LIMIT 20;")
 	if isErr(err) {
 		resFunc(500, "", err.Error())
 	}
@@ -112,7 +106,7 @@ func (fci *formulaCI) getHistory(data interface{}, resFunc wsResFunc) {
 	}
 	for rows.Next() {
 		var v tableHistory
-		rows.Scan(&v.Result, &v.Repo, &v.Branch, &v.Flow, &v.Log, &v.Time, &v.Dur)
+		rows.Scan(&v.Result, &v.Repo, &v.Branch, &v.Flow, &v.Log, &v.Time, &v.Dur, &v.RowID)
 		list = append(list, v)
 	}
 	resFunc(200, jsonString(list), "")

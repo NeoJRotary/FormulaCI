@@ -19,6 +19,7 @@ type tableHistory struct {
 	Log    string  `json:"log"`
 	Time   int64   `json:"time"`
 	Dur    float64 `json:"dur"`
+	RowID  int64   `json:"rowid"`
 
 	flow []string
 	log  map[string]string

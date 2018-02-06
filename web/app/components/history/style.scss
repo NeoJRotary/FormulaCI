@@ -1,14 +1,88 @@
 section#history {
-  .record {
-    margin: 10px 0;
-    border: 1px solid #AAA;
-    .col {
-      display: inline-block;
-      margin: 0 5px;
+  a {
+    color: black;
+    text-decoration: none;
+  }
+
+  .hisCard {
+    margin: 10px;
+    border: 1px solid #999;
+    border-radius: 10px;
+    padding: 10px;
+
+    &:hover {
+      border-color: #CCC 
     }
-    .cliLog {
-      background: black;
-      color: white;
+
+    .repo {
+      display: inline-block;
+      margin-left: 10px;
+    }
+
+    .time {
+      display: inline-block;
+      margin-left: 10px;
+    }
+
+    .flow {
+      margin: 10px 0 0 10px;
+      .title {
+        font-size: 15px;
+        margin: 5px;
+      }
+      .line {
+        vertical-align: middle;
+        display: inline-block;
+        width: 20px;
+        border-top: 1px dashed black;
+      }
+      .tag {
+        background-color: none;
+      }
+    }
+
+    .tag {
+      border-radius: 5px;
+      padding: 5px;
+      display: inline-block;
+      border: 1px solid black;
+      color: black;
+
+      &.canceled {
+        border-color: #333;
+        background: #AAA;
+        color: #333;
+      }
+      &.running {
+        border-color: #33F;
+        background: #AAF;
+        color: #339;
+      }
+      &.failed {
+        border-color: #F33;
+        background: #FAA;
+        color: #933;
+      }
+      &.success {
+        border-color: #3F3;
+        background: #AFA;
+        color: #393;
+      }
+    }
+  }
+
+  .detail {
+    .log {
+      .step {
+        font-size: 20px;
+        font-weight: bold;
+      }
+      .cliLog {
+        margin: 5px;
+        padding: 5px;
+        background: black;
+        color: white;
+      }
     }
   }
 }

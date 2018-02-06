@@ -33,7 +33,7 @@ class App extends React.Component {
         <Route component={sidemenu} />
         <Route exact path="/" component={dashboard} />
         <Route exact path="/repository" component={repository} />
-        <Route exact path="/history" component={history} />
+        <Route exact path="/history/:id?" component={history} />
         <Route exact path="/config" component={config} />
       </div>
     );

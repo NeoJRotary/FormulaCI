@@ -27,8 +27,7 @@
           "Link"
         ],
         "specialLink": [
-          "hrefLeft",
-          "hrefRight"
+          "to"
         ],
         "aspects": [
           "noHref",
