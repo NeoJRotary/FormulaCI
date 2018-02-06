@@ -4,8 +4,10 @@ branch: master
 setup: 
 - npm i
 trigger:
-  changes:
-  - /web/*
+  - name: project
+    value: web
+    changes:
+    - /web/*
 flow:
 - install
 - build-app
@@ -13,21 +15,23 @@ flow:
 - build-server
 steps:
   install:
-    changes:
-    - package.json
-    - package-lock.json
+    trigger:
+    - changes:
+      - package.json
+      - package-lock.json
     cmd:
     - npm i
   build-app:
     cmd:
-    - npm run build-app
+    - npm run build-app ${project}
   test-app:
-    cmd: 
+    cmd:
     - npm test
   build-server: 
     cmd:
     - npm run build-server
 deploy:
+  path: /${project}/
   target: kubernetes
   kubernetes:
     type: deploy
@@ -35,5 +39,7 @@ deploy:
     name: admin
     containerName: admin
     image: asia.gcr.io/project-iddddd/admin:latest
-webhook:
-  slack: https://hooks.slack.com/services/T00000000/B00000000/XXXXXXXXXXXXXXXXXXXXXXXX
+webhooks:
+- type: slack
+  url: https://hooks.slack.com/services/T00000000/B00000000/XXXXXXXXXXXXXXXXXXXXXXXX
+  prefix: "*[ ${repo}/${branch} ]*"

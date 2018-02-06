@@ -64,22 +64,37 @@ func (m *webhooksManager) getFromGitlab(w http.ResponseWriter, r *http.Request) 
 	}
 }
 
-func (m *webhooksManager) sendToSlack(url string, hs tableHistory) {
+func (m *webhooksManager) send(hook formulaWebhook, hs tableHistory, triggers []*formulaTrigger) {
+	switch hook.Type {
+	case "slack":
+		m.sendToSlack(hook, hs, triggers)
+	}
+}
+
+func (m *webhooksManager) sendToSlack(hook formulaWebhook, hs tableHistory, triggers []*formulaTrigger) {
+	prefix := "*[ " + hs.Repo + "/" + hs.Branch + " ]*"
+	if hook.Prefix != "" {
+		prefix = hook.Prefix
+		prefix = strings.Replace(prefix, "${repo}", hs.Repo, -1)
+		prefix = strings.Replace(prefix, "${branch}", hs.Branch, -1)
+		prefix = ci.replaceTriggerVar(triggers, prefix)
+	}
+
 	temp := ""
 	switch hs.Result {
 	case -2:
-		temp = fmt.Sprintf("*[ %s/%s ]* pipeline canceled.", hs.Repo, hs.Branch)
+		temp = prefix + " pipeline canceled."
 	case -1:
-		temp = fmt.Sprintf("*[ %s/%s ]* new pipeline created.", hs.Repo, hs.Branch)
+		temp = prefix + " new pipeline created."
 	case 0:
-		temp = fmt.Sprintf("*[ %s/%s ]* pipeline failed", hs.Repo, hs.Branch)
+		temp = prefix + " pipeline failed"
 	case 1:
-		temp = fmt.Sprintf("*[ %s/%s ]* pipeline completed. Used %v seconds", hs.Repo, hs.Branch, hs.Dur)
+		temp = fmt.Sprintf(prefix+" pipeline completed. Used %v seconds", hs.Dur)
 	default:
 		return
 	}
 	reader := strings.NewReader(jsonString(map[string]string{"text": temp}))
-	_, err := http.Post(url, "application/json", reader)
+	_, err := http.Post(hook.URL, "application/json", reader)
 	if err != nil {
 		fmt.Println(err)
 	}

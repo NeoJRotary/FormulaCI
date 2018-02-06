@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"io/ioutil"
+	"path/filepath"
 	"strings"
 	"sync"
 	"time"
@@ -24,19 +25,21 @@ var ci = formulaCI{
 }
 
 type formula struct {
-	Repo    string
-	Branch  string
-	Mode    string
-	Name    string
-	Setup   []string
-	Trigger []formulaTrigger
-	Flow    []string
-	Steps   map[string]formulaStep
-	Deploy  formulaDeploy
-	Webhook formulaWebhook
+	Repo     string
+	Branch   string
+	Mode     string
+	Name     string
+	Setup    []string
+	Trigger  []formulaTrigger
+	Flow     []string
+	Steps    map[string]formulaStep
+	Deploy   formulaDeploy
+	Webhooks []formulaWebhook
 }
 
 type formulaTrigger struct {
+	Name    string
+	Value   string
 	Tag     string
 	Changes []string
 }
@@ -48,6 +51,7 @@ type formulaStep struct {
 }
 
 type formulaDeploy struct {
+	Path       string
 	Target     string
 	Kubernetes struct {
 		Type          string
@@ -66,7 +70,9 @@ type formulaDeploy struct {
 }
 
 type formulaWebhook struct {
-	Slack string
+	Type   string
+	URL    string `yaml:"url"`
+	Prefix string
 }
 
 const formulaYAML = ".formulaci.yaml"
@@ -115,14 +121,7 @@ func (fci *formulaCI) getHistory(data interface{}, resFunc wsResFunc) {
 func (fci *formulaCI) install(name string, branch string, pipe *execPipeline) error {
 	fmt.Println("Formula installing ", name, branch)
 	dir := repoPath + name + "/" + branch + "/"
-	// _, err := runCmdPath(dir, "git", "checkout", branch)
-	// if isErr(err) {
-	// 	return err
-	// }
-	// _, err = runCmdPath(dir, "git", "pull", "origin", branch)
-	// if isErr(err) {
-	// 	return err
-	// }
+
 	b, err := ioutil.ReadFile(dir + formulaYAML)
 	if isErr(err) {
 		return err
@@ -142,21 +141,6 @@ func (fci *formulaCI) install(name string, branch string, pipe *execPipeline) er
 		for _, setup := range f.Setup {
 			cmds = append(cmds, dir, strings.Fields(setup))
 		}
-
-		// if pipe != nil {
-		// 	pipe.start(cmds)
-		// 	_, cancel, err := pipe.wait()
-		// 	if cancel {
-		// 		return errors.New("pipeline canceled")
-		// 	} else if isErr(err) {
-		// 		return err
-		// 	}
-		// } else {
-		// 	_, err = cmdEX.runSets(cmds...)
-		// 	if isErr(err) {
-		// 		return err
-		// 	}
-		// }
 
 		_, err = cmdEX.runSets(cmds...)
 		if isErr(err) {
@@ -211,6 +195,19 @@ func (fci *formulaCI) trigger(repoName string, hookBranch string) {
 		} else {
 			fmt.Println("trigger done : ", repoName, hookBranch)
 		}
+
+		mutex.Lock()
+		pipe.cancel()
+		allStop := true
+		for _, p := range fci.pipelines[repoName][hookBranch] {
+			if !p.stop {
+				allStop = false
+			}
+		}
+		if allStop {
+			delete(fci.pipelines[repoName], hookBranch)
+		}
+		mutex.Unlock()
 	}()
 
 	now := time.Now()
@@ -219,6 +216,7 @@ func (fci *formulaCI) trigger(repoName string, hookBranch string) {
 	pipe.start(
 		dir, []string{"git", "rev-parse", "HEAD"},
 		dir, []string{"git", "reset", "--hard", "HEAD"},
+		dir, []string{"git", "clean", "-xdf"},
 		dir, []string{"git", "pull", "origin", hookBranch},
 	)
 	res, cancel, err = pipe.wait()
@@ -251,35 +249,52 @@ func (fci *formulaCI) trigger(repoName string, hookBranch string) {
 		if pipe.stop {
 			return
 		}
-		if fci.validTrigger(&f.Trigger, changes) {
-			go ci.run(f, changes, now)
+		ls := fci.validTrigger(&f.Trigger, changes)
+		if len(ls) != 0 || ls == nil {
+			go ci.run(f, changes, ls, now)
 		}
 	}
-
-	pipe.cancel()
 }
 
-func (fci *formulaCI) validTrigger(triggers *[]formulaTrigger, changes []string) bool {
+func (fci *formulaCI) validTrigger(triggers *[]formulaTrigger, changes []string) []*formulaTrigger {
 	if len(*triggers) == 0 {
-		return true
+		return nil
 	}
+
+	ls := []*formulaTrigger{}
 	for _, t := range *triggers {
 		for _, tc := range t.Changes {
-			for _, c := range changes {
-				if c == "" {
-					continue
+			if len(changes) == 0 {
+				if glob.MustCompile(tc).Match("") {
+					ls = append(ls, &t)
 				}
-				if glob.MustCompile(tc).Match(c) {
-					return true
+			} else {
+				for _, c := range changes {
+					// if c == "" {
+					// 	continue
+					// }
+					if glob.MustCompile(tc).Match(c) {
+						ls = append(ls, &t)
+					}
 				}
 			}
 		}
 	}
-	return false
+	return ls
+}
+
+func (fci *formulaCI) replaceTriggerVar(triggers []*formulaTrigger, cmd string) string {
+	for _, t := range triggers {
+		if t.Name != "" {
+			cmd = strings.Replace(cmd, "${"+t.Name+"}", t.Value, -1)
+		}
+	}
+
+	return cmd
 }
 
 // func (fci *formulaCI) run(repoName string, branch string, i int) {
-func (fci *formulaCI) run(f *formula, changes []string, now time.Time) {
+func (fci *formulaCI) run(f *formula, changes []string, globalTriggers []*formulaTrigger, now time.Time) {
 	mutex.Lock()
 	pipe := cmdEX.newPipeline()
 	fci.pipelines[f.Repo][f.Branch] = append(fci.pipelines[f.Repo][f.Branch], pipe)
@@ -314,8 +329,8 @@ func (fci *formulaCI) run(f *formula, changes []string, now time.Time) {
 
 	dir := repoPath + f.Repo + "/" + f.Branch
 
-	if f.Webhook.Slack != "" {
-		go webhooksM.sendToSlack(f.Webhook.Slack, hs)
+	for _, hook := range f.Webhooks {
+		go webhooksM.send(hook, hs, globalTriggers)
 	}
 
 	for _, fw := range f.Flow {
@@ -325,18 +340,24 @@ func (fci *formulaCI) run(f *formula, changes []string, now time.Time) {
 
 		output := []string{}
 		if _, ok := f.Steps[fw]; !ok {
-			return
+			hs.log[fw] = "has flow but step is not defined"
+			continue
 		}
 		hs.flow = append(hs.flow, fw)
 		step := f.Steps[fw]
 
-		if !fci.validTrigger(&step.Trigger, changes) {
+		ls := fci.validTrigger(&step.Trigger, changes)
+		if len(ls) == 0 && ls != nil {
 			hs.log[fw] = "skip"
 			continue
 		}
 
+		triggers := append([]*formulaTrigger{}, globalTriggers...)
+		triggers = append(triggers, ls...)
+
 		cmds := []interface{}{}
 		for _, cmd := range step.Cmd {
+			cmd = fci.replaceTriggerVar(triggers, cmd)
 			cmds = append(cmds, dir, strings.Fields(cmd))
 		}
 
@@ -358,11 +379,15 @@ func (fci *formulaCI) run(f *formula, changes []string, now time.Time) {
 	if hs.Result == -1 && f.Deploy.Target == "kubernetes" {
 		k8s := f.Deploy.Kubernetes
 		output := []string{}
+		name := fci.replaceTriggerVar(globalTriggers, k8s.Name)
+		containerName := fci.replaceTriggerVar(globalTriggers, k8s.ContainerName)
+		image := fci.replaceTriggerVar(globalTriggers, k8s.Image)
+		dockerPath := filepath.Join(dir, fci.replaceTriggerVar(globalTriggers, f.Deploy.Path))
 		pipe.start(
-			dir, []string{"docker", "build", "-t", k8s.Image, "."},
-			dir, []string{"docker", "tag", k8s.Image, k8s.Image},
-			dir, []string{"gcloud", "docker", "--", "push", k8s.Image},
-			"", []string{"./kube-update-img.sh", k8s.Namespace, k8s.Type, k8s.Name, k8s.ContainerName, k8s.Image},
+			dockerPath, []string{"docker", "build", "-t", image, "."},
+			dir, []string{"docker", "tag", image, image},
+			dir, []string{"gcloud", "docker", "--", "push", image},
+			"", []string{"./kube-update-img.sh", k8s.Namespace, k8s.Type, name, containerName, image},
 		)
 		res, cancel, err = pipe.wait()
 		for _, r := range res {
@@ -405,7 +430,7 @@ func (fci *formulaCI) run(f *formula, changes []string, now time.Time) {
 		hs.Result, hs.Repo, hs.Branch, hs.Flow, hs.Log, hs.Time, hs.Dur,
 	)
 
-	if f.Webhook.Slack != "" {
-		go webhooksM.sendToSlack(f.Webhook.Slack, hs)
+	for _, hook := range f.Webhooks {
+		go webhooksM.send(hook, hs, globalTriggers)
 	}
 }
