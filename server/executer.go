@@ -59,7 +59,12 @@ func (excmd *executerCMD) start() {
 }
 
 func (excmd *executerCMD) wait() {
-	excmd.done <- excmd.cmd.Wait()
+	err := excmd.cmd.Wait()
+	if isErr(err) {
+		excmd.done <- errors.New(excmd.stderr.String())
+	} else {
+		excmd.done <- nil
+	}
 }
 
 func (excmd *executerCMD) output() string {

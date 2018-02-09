@@ -94,7 +94,7 @@ func (git *gitAPI) pullRepo(name string, branch string, src string) (err error) 
 		if isErr(err) {
 			return err
 		}
-		_, err = cmdEX.runDir(dir, "git", "clean", "-xdf")
+		_, err = cmdEX.runDir(dir, "git", "clean", "-df")
 		if isErr(err) {
 			return err
 		}

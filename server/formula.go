@@ -210,7 +210,7 @@ func (fci *formulaCI) trigger(repoName string, hookBranch string) {
 	pipe.start(
 		dir, []string{"git", "rev-parse", "HEAD"},
 		dir, []string{"git", "reset", "--hard", "HEAD"},
-		dir, []string{"git", "clean", "-xdf"},
+		dir, []string{"git", "clean", "-df"},
 		dir, []string{"git", "pull", "origin", hookBranch},
 	)
 	res, cancel, err = pipe.wait()
