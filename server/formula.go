@@ -79,7 +79,7 @@ func (fci *formulaCI) init() {
 			b := branch
 			wg.Add(1)
 			go func() {
-				fci.install(n, b, nil)
+				fci.install(n, b)
 				wg.Done()
 			}()
 		}
@@ -112,7 +112,7 @@ func (fci *formulaCI) getHistory(data interface{}, resFunc wsResFunc) {
 	resFunc(200, jsonString(list), "")
 }
 
-func (fci *formulaCI) install(name string, branch string, pipe *execPipeline) error {
+func (fci *formulaCI) install(name string, branch string) error {
 	fmt.Println("Formula installing ", name, branch)
 	dir := repoPath + name + "/" + branch + "/"
 
@@ -233,7 +233,7 @@ func (fci *formulaCI) trigger(repoName string, hookBranch string) {
 		}
 
 		if strings.Index(s, formulaYAML) != -1 {
-			fci.install(repoName, hookBranch, pipe)
+			fci.install(repoName, hookBranch)
 			break
 		}
 	}

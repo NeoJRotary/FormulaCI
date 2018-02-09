@@ -83,7 +83,7 @@ func (rp *repositories) add(data interface{}, resFunc wsResFunc) {
 		return
 	}
 
-	err = ci.install(name, branch, nil)
+	err = ci.install(name, branch)
 	if isErr(err) {
 		resFunc(400, "", err.Error())
 		cmdEX.run("rm", "-rf", dir)
