@@ -1,3 +1,5 @@
+#!/bin/bash
+
 # build formulaci-base image and formulaci-dev-base first
 # > cd images
 # > ./build.sh base 

@@ -1,3 +1,5 @@
+#!/bin/bash
+
 docker build -t formulaci-dev -f ./Dockerfile-dev .
 cd web
 npm run production

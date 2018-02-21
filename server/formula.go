@@ -85,6 +85,7 @@ func (fci *formulaCI) init() {
 		}
 	}
 	wg.Wait()
+	// fmt.Println(fci.list)
 }
 
 func (fci *formulaCI) getHistory(data interface{}, resFunc wsResFunc) {
@@ -121,15 +122,18 @@ func (fci *formulaCI) install(name string, branch string) error {
 		return err
 	}
 	bb := bytes.Split(b, []byte("---\n"))
-	// flist := []*formula{}
 	for _, s := range bb {
 		var f formula
 		err := yaml.Unmarshal(s, &f)
 		if isErr(err) {
 			return err
 		}
+
+		if f.Branch != branch {
+			continue
+		}
+
 		f.Repo = name
-		f.Branch = branch
 
 		cmds := []interface{}{}
 		for _, setup := range f.Setup {
@@ -141,7 +145,6 @@ func (fci *formulaCI) install(name string, branch string) error {
 			return err
 		}
 
-		// flist = append(flist, &f)
 		mutex.Lock()
 		if _, ok := fci.list[name]; !ok {
 			fci.list[name] = map[string][]*formula{}
