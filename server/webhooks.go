@@ -53,7 +53,7 @@ func (m *webhooksManager) getFromGitlab(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	fmt.Println(repo.hub)
+	// fmt.Println(repo.hub)
 
 	hookBranch := strings.Replace(hook.Ref, "refs/heads/", "", 1)
 	for _, r := range repo.hub["gitlab.com"] {

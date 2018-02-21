@@ -121,7 +121,7 @@ func (fci *formulaCI) install(name string, branch string) error {
 		return err
 	}
 	bb := bytes.Split(b, []byte("---\n"))
-	flist := []*formula{}
+	// flist := []*formula{}
 	for _, s := range bb {
 		var f formula
 		err := yaml.Unmarshal(s, &f)
@@ -141,15 +141,17 @@ func (fci *formulaCI) install(name string, branch string) error {
 			return err
 		}
 
-		flist = append(flist, &f)
+		// flist = append(flist, &f)
+		mutex.Lock()
+		if _, ok := fci.list[name]; !ok {
+			fci.list[name] = map[string][]*formula{}
+		}
+		if _, ok := fci.list[name][branch]; !ok {
+			fci.list[name][branch] = []*formula{}
+		}
+		fci.list[name][branch] = append(fci.list[name][branch], &f)
+		mutex.Unlock()
 	}
-
-	mutex.Lock()
-	if _, ok := fci.list[name]; !ok {
-		fci.list[name] = map[string][]*formula{}
-	}
-	fci.list[name][branch] = flist
-	mutex.Unlock()
 
 	return nil
 }
