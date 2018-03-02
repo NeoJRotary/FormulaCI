@@ -25,10 +25,10 @@ Self-Hosted CI/CD server for Kubernetes on GCP
 - Some other ideas in my mind ~
 
 ## Build
-Prepare base image, run `./base/build.sh base`  
-Prepare dev-base image, run `./base/build.sh dev-base`  
-Start dev server in docker, run `./dev.sh`  
-Build production image, run `./build.sh` 
+Prepare base image, go to `base` then run `./build.sh base`  
+Prepare dev-base image, go to `base` then run `./build.sh dev-base`  
+Start dev server in docker, run `./dev.sh`
+Build production image, run `./build.sh`
 
 It use dev-base for server building then COPY from it. You can check Dockerfile for more detail.
 

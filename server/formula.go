@@ -122,6 +122,8 @@ func (fci *formulaCI) install(name string, branch string) error {
 		return err
 	}
 	bb := bytes.Split(b, []byte("---\n"))
+
+	list := []*formula{}
 	for _, s := range bb {
 		var f formula
 		err := yaml.Unmarshal(s, &f)
@@ -145,16 +147,15 @@ func (fci *formulaCI) install(name string, branch string) error {
 			return err
 		}
 
-		mutex.Lock()
-		if _, ok := fci.list[name]; !ok {
-			fci.list[name] = map[string][]*formula{}
-		}
-		if _, ok := fci.list[name][branch]; !ok {
-			fci.list[name][branch] = []*formula{}
-		}
-		fci.list[name][branch] = append(fci.list[name][branch], &f)
-		mutex.Unlock()
+		list = append(list, &f)
 	}
+
+	mutex.Lock()
+	if _, ok := fci.list[name]; !ok {
+		fci.list[name] = map[string][]*formula{}
+	}
+	fci.list[name][branch] = list
+	mutex.Unlock()
 
 	return nil
 }
@@ -231,7 +232,6 @@ func (fci *formulaCI) trigger(repoName string, hookBranch string) {
 	}
 
 	changes := strings.Split(res[0].output, "\n")
-
 	for _, s := range changes {
 		if pipe.stop {
 			return
@@ -243,8 +243,7 @@ func (fci *formulaCI) trigger(repoName string, hookBranch string) {
 		}
 	}
 
-	formulas := fci.list[repoName][hookBranch]
-	for _, f := range formulas {
+	for _, f := range fci.list[repoName][hookBranch] {
 		if pipe.stop {
 			return
 		}
