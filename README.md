@@ -9,6 +9,7 @@ Self-Hosted CI/CD server for Kubernetes on GCP
 - Webhook to : slack
 - Built-in `Cloud SDK`, `Docker`, `Git`
 - Built-in `Nodejs`, `Golang`
+- Built-in `npm`, `yarn`
 - Auto-deploy k8s pods by configuration in `.formulaci.yaml`
 - All system configurations are availible in web interface 
 - "Host Mode" run CI pipeline directly in server process which you can re-use `node_modules` and `go/src`

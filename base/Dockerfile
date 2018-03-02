@@ -4,7 +4,7 @@ FROM google/cloud-sdk:alpine as gcloud
 # docker:dind is alpine
 FROM docker:dind
 
-RUN apk --no-cache add bash git sqlite
+RUN apk --no-cache add bash git sqlite yarn
 
 ### Golang ###
 COPY --from=golang /usr/local/go/bin /usr/local/go/bin
