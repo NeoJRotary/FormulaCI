@@ -1,4 +1,4 @@
-package main
+package server
 
 import (
 	"encoding/json"
@@ -30,7 +30,8 @@ var upgrader = websocket.Upgrader{
 	},
 }
 
-type formulaServer struct {
+// APIServer ...
+type APIServer struct {
 	conn *websocket.Conn
 	mux  *http.ServeMux
 }
@@ -43,13 +44,14 @@ type wsEvt struct {
 
 type wsResFunc func(int, interface{}, string) error
 
-func startFormulaServer(mux *http.ServeMux) {
+// Start ...
+func Start(mux *http.ServeMux) {
 	svr := formulaServer{mux: mux}
 	mux.HandleFunc("/sys-ws", svr.wsUpgrade)
 	webhooksM.init(mux)
 }
 
-func (svr *formulaServer) wsUpgrade(w http.ResponseWriter, r *http.Request) {
+func (apis *APIServer) wsUpgrade(w http.ResponseWriter, r *http.Request) {
 	c, err := upgrader.Upgrade(w, r, nil)
 	if isErr(err) {
 		log.Println(err)
@@ -76,7 +78,7 @@ func (svr *formulaServer) wsUpgrade(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (svr *formulaServer) getResFunc(evt wsEvt) wsResFunc {
+func (apis *APIServer) getResFunc(evt wsEvt) wsResFunc {
 	return func(status int, data interface{}, errMsg string) error {
 		if data == nil {
 			data = ""
@@ -100,7 +102,7 @@ func (svr *formulaServer) getResFunc(evt wsEvt) wsResFunc {
 	}
 }
 
-func (svr *formulaServer) handler(evt wsEvt) {
+func (apis *APIServer) handler(evt wsEvt) {
 	resFunc := svr.getResFunc(evt)
 	switch evt.Name {
 	case "gcloud/getInfo":

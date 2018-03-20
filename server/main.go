@@ -2,19 +2,38 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"net/http"
-	"sync"
+
+	"./executer"
+	"./formula"
+	"./litedb"
+	"./repo"
+	D "github.com/NeoJRotary/describe-go"
 )
 
 const dataPath = "/formulaci/data/"
 
-var mutex = &sync.Mutex{}
+var (
+	db       *litedb.DB
+	repoM    *repo.Manager
+	formulaM *formula.Master
+	execEX   *executer.Exec
+)
 
 func init() {
+	var e error
 	// runCmd("bash", "init.sh")
-	sqlite.connect()
-	repo.init()
-	ci.init()
+	db, e = litedb.Init(dataPath + "sqlite.db")
+	if D.IsErr(e) {
+		log.Fatalln(D.ErrWithTitle(e, "litedb init :"))
+	}
+	repoM, e = repo.Init(dataPath+"repo/", db)
+	if D.IsErr(e) {
+		log.Fatalln(D.ErrWithTitle(e, "repo init :"))
+	}
+	formulaM, e = formula.Init(".formulaci.yaml", repoM, execEX)
+	// ci.init()
 	fmt.Println("Formula CI Server Init Done")
 }
 

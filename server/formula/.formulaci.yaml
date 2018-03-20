@@ -8,6 +8,10 @@ trigger:
     value: web
     changes:
     - /web/*
+  - name: project
+    value: server
+    changes:
+    - /server/*
 flow:
 - install
 - build-app

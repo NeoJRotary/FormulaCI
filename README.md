@@ -1,7 +1,9 @@
-# Formula CI v0.1.0
+# Formula CI v0.1.2
 Self-Hosted CI/CD server for Kubernetes on GCP
 
 ## Still In Progess, Currently Just Prototype
+You can try latest version at   
+`docker pull neojrotary/formulaci`
   
 ## Support
 - GCP and GKE
