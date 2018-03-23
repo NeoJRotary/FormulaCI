@@ -1,4 +1,4 @@
-# Formula CI v0.1.2
+# Formula CI v0.2.0
 Self-Hosted CI/CD server for Kubernetes on GCP
 
 ## Still In Progess, Currently Just Prototype

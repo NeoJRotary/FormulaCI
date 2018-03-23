@@ -4,9 +4,11 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"path"
 
 	"./executer"
 	"./formula"
+	"./git"
 	"./litedb"
 	"./repo"
 	D "github.com/NeoJRotary/describe-go"
@@ -16,23 +18,28 @@ const dataPath = "/formulaci/data/"
 
 var (
 	db       *litedb.DB
+	gitA     *git.Agent
 	repoM    *repo.Manager
 	formulaM *formula.Master
 	execEX   *executer.Exec
 )
 
 func init() {
-	var e error
-	// runCmd("bash", "init.sh")
-	db, e = litedb.Init(dataPath + "sqlite.db")
+	var err error
+
+	db, err = litedb.Init(path.Join(dataPath, "sqlite.db"))
 	if D.IsErr(e) {
-		log.Fatalln(D.ErrWithTitle(e, "litedb init :"))
+		log.Fatalln(D.ErrWithTitle("litedb init :", e))
 	}
-	repoM, e = repo.Init(dataPath+"repo/", db)
+
+	gitA, err = git.NewAgent(dataPath)
+
+	repoM, err = repo.Init(path.Join(dataPath, "repo"), db, gitA)
 	if D.IsErr(e) {
-		log.Fatalln(D.ErrWithTitle(e, "repo init :"))
+		log.Fatalln(D.ErrWithTitle("repo init :", e))
 	}
-	formulaM, e = formula.Init(".formulaci.yaml", repoM, execEX)
+
+	formulaM, err = formula.Init(".formulaci.yaml", repoM, execEX)
 	// ci.init()
 	fmt.Println("Formula CI Server Init Done")
 }

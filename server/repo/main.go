@@ -1,73 +1,100 @@
 package repo
 
 import (
-	"log"
-	"strings"
+	"path"
 	"sync"
 
+	"../executer"
+	"../git"
 	"../litedb"
 	D "github.com/NeoJRotary/describe-go"
 )
 
 // Repository ...
 type Repository struct {
-	Name   string `json:"name"`
-	Src    string `json:"src"`
-	Branch string `json:"branch"`
+	litedb.TableRepo
+	Git *git.Repository
 }
 
 // Manager ...
 type Manager struct {
 	RepoPath string
 	db       *litedb.DB
-	List     map[string]map[string]*Repository
-	Hub      map[string][]*Repository
+	execEX   *executer.Exec
+	git      *git.Agent
+	Map      map[string]*Repository
+	List     []*Repository
 }
 
 var mutex = &sync.Mutex{}
 
 // Init ...
-func Init(repoPath string, db *litedb.DB) (*Manager, error) {
-	list, err := db.GetAllRepo()
-	if D.IsErr(err) {
-		log.Fatalln(err)
-	}
+func Init(repoPath string, db *litedb.DB, execEX *executer.Exec, gitA *git.Agent) (man *Manager, err error) {
+	defer D.RecoverErr(nil)
 
-	rpm := Manager{
+	list, err := db.GetAllRepo()
+	D.CheckErr(err)
+
+	man = &Manager{
 		RepoPath: repoPath,
+		git:      gitA,
 		db:       db,
-		List:     map[string]map[string]*Repository{},
-		Hub:      map[string][]*Repository{},
+		execEX:   execEX,
+		Map:      map[string]*Repository{},
+		List:     []*Repository{},
 	}
 
 	for _, l := range list {
-		r := Repository{
-			Name:   l.Name,
-			Src:    l.Src,
-			Branch: l.Branch,
-		}
-		atI := strings.Index(r.Src, "@")
-		colonI := strings.Index(r.Src[atI:], ":")
-		hub := r.Src[atI+1 : atI+colonI]
-		mutex.Lock()
-		if _, ok := rpm.List[r.Name]; !ok {
-			rpm.List[r.Name] = map[string]*Repository{}
-		}
-		rpm.List[r.Name][r.Branch] = &r
-		rpm.Hub[hub] = append(rpm.Hub[hub], &r)
-		mutex.Unlock()
+		repo, err := gitA.NewRepository(l.Dir, "origin", l.Src, l.Branch)
+		D.CheckErr(err)
+
+		man.AddRepo(l, repo)
 	}
 
-	return &rpm, nil
+	return man, nil
+}
+
+// GetListKey ...
+func GetListKey(hub, user, name, branch string) string {
+	return D.StringSlice([]string{hub, user, name, branch}).Join("/").Get()
+}
+
+// AddRepo ...
+func (man *Manager) AddRepo(row litedb.TableRepo, repo *git.Repository) {
+	r := &Repository{row, repo}
+	key := GetListKey(row.Hub, row.User, row.Name, row.Branch)
+	mutex.Lock()
+	man.List = append(man.List, r)
+	man.Map[key] = r
+	mutex.Unlock()
 }
 
 // HasRepo ...
-func (man *Manager) HasRepo(name string, branch string) bool {
-	if _, ok := man.List[name]; !ok {
-		return false
-	}
-	if _, ok := man.List[name][branch]; !ok {
-		return false
-	}
-	return true
+func (man *Manager) HasRepo(key string) bool {
+	_, ok := man.Map[key]
+	return ok
+}
+
+// NewRepo ...
+func (man *Manager) NewRepo(src, branch string) (err error) {
+	dir := path.Join(man.RepoPath, UUID())
+	defer D.RecoverErr(func(err error) {
+		man.execEX.Run("rm", "-rf", dir)
+	})
+
+	_, err = man.execEX.Run("mkdir", "-p", dir)
+	D.CheckErr(err)
+
+	hub, user, name, err := ResolveSrc(src)
+	D.CheckErr(err)
+
+	repo, err := man.git.NewRepository(dir, "origin", src, branch)
+	D.CheckErr(err)
+
+	row, err := man.db.InsertRepo(dir, src, hub, user, name, branch)
+	D.CheckErr(err)
+
+	man.AddRepo(row, repo)
+
+	return nil
 }

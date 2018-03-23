@@ -19,6 +19,9 @@ type Result struct {
 	output string
 }
 
+// RunFunc ...
+type RunFunc func(...string) (string, error)
+
 // NewExec ...
 func NewExec(doStdLog bool) *Exec {
 	return &Exec{
@@ -42,17 +45,19 @@ func (ex *Exec) Run(args ...string) (out string, err error) {
 }
 
 // RunDir ...
-func (ex *Exec) RunDir(dir string, args ...string) (out string, err error) {
-	cmd := ex.NewCMD(dir, args...)
-	out, err = cmd.Run()
-	if ex.doStdLog {
-		if D.IsErr(err) {
-			ex.stdLogger.Println(cmd.str, "\n", out, err.Error())
-		} else {
-			ex.stdLogger.Println(cmd.str, "\n", out)
+func (ex *Exec) RunDir(dir string) RunFunc {
+	return func(args ...string) (out string, err error) {
+		cmd := ex.NewCMD(dir, args...)
+		out, err = cmd.Run()
+		if ex.doStdLog {
+			if D.IsErr(err) {
+				ex.stdLogger.Println(cmd.str, "\n", out, err.Error())
+			} else {
+				ex.stdLogger.Println(cmd.str, "\n", out)
+			}
 		}
+		return out, err
 	}
-	return out, err
 }
 
 // RunSets ...

@@ -8,8 +8,11 @@ type TableConfig struct {
 
 // TableRepo ...
 type TableRepo struct {
-	Name   string
+	Dir    string
 	Src    string
+	Hub    string
+	User   string
+	Name   string
 	Branch string
 }
 
@@ -31,7 +34,14 @@ type TableHistory struct {
 // InitTables ...
 func (db *DB) InitTables() {
 	db.Exec("CREATE TABLE config (key text unique, value text);")
-	db.Exec("CREATE TABLE repo (name text, src text, branch text);")
+	db.Exec(`CREATE TABLE repo (
+		dir text,
+		src text,
+		hub text,
+		user text,
+		name text,
+		branch text
+		);`)
 	db.Exec(`CREATE TABLE history (
 		result integer,
 		repo text,
